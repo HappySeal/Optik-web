@@ -12,6 +12,9 @@ const animationTime = 2500;
 
 var buttonStr = ["Merkez Işını", "Odak Işını", "Paralel Işın", "3F Işını", "Çıkış"];
 
+if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+ alert("Bu program telefon veya tablet desteklememektedir.Kullanıma devam ederseniz büyük dengesizlikler ile karşılaşabilirsiniz.");
+}
 
 function setup() {
   // put setup code here
