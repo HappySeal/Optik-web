@@ -13,11 +13,16 @@ var angle = 0;
 var logo ;
 
 var buttonStr = ["Merkez Işını", "Odak Işını", "Paralel Işın", "3F Işını", "KIRILMA","BOY ORANI"];
-var buttonStrMirH = ["Merkez Cismi", "Odak Cismi", "Sonsuz Cismi", "3F Cismi", "TÜMSEK AYNA","KIRILMA"];
+var buttonStrMirH = ["Merkez Cismi", "Odak Cismi", "Sonsuz Cismi", "3F Cismi", "ÇUKUR AYNA","KIRILMA"];
+var buttonStrRef = ["1.Kırıcı indis++", "1.Kırıcı indis--", "2.Kırıcı indis++", "2.Kırıcı indis--", "BOY ORANI","ÇUKUR AYNA"];
 /*---------------------------------------------------------*/
 //AYNA GÖRÜNTÜ
 var r1,f1,vecMirH,centerXMirH,centerYMirH;
 /*---------------------------------------------------------*/
+//KIRILMA
+var vecRef;
+var n1 = 1;
+var n2 = 1.5;
 
 /*---------------------------------------------------------*/
 
@@ -32,6 +37,7 @@ if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 function preload() {
   logo = loadImage('static/images/iconGray.png');
   vecMirH = createVector(0,0);
+  vecRef = createVector(0,0);
 }
 
 function setup() {
@@ -138,6 +144,24 @@ var refCal = function(x,y){
   var c = [];
   c[0] = (x*f1)/(x-f1);
   c[1] = -c[0]*y/x;
+
+  return c;
+}
+var refrCal = function(x,y){
+  var c = [];
+  var angleI = atan2(y,x);
+  var critAngle = (n1<n2)?PI/2 - asin(n1/n2):PI/2 - asin(n2/n1);
+
+  if(angleI<critAngle && 0<angleI){
+    var angleR = PI + angleI;
+  }else if(angleI>PI-critAngle && PI>angleI){
+    var angleR = -PI + angleI;
+  }else{
+    var angleR  = (y<0)?(-asin(sin(-PI/2 + angleI)*n1/n2)+PI/2):(-asin(sin(-PI/2 + angleI)*n2/n1)+PI/2);
+  }
+
+  c[0] = dist(0,0,x,y)*cos(angleR);
+  c[1] = dist(0,0,x,y)*sin(angleR);
 
   return c;
 }
@@ -268,7 +292,7 @@ function mirrorHeight(){
   strokeWeight(2);
   line(-width,0,width,0);
   strokeWeight(20);
-  //colorMode(HSB);
+  //co                                                                                                                                                                                                                             lorMode(HSB);
   stroke(200);
   var ref = refCal(vecMirH.x,vecMirH.y);
   strokeWeight(2);
@@ -321,12 +345,79 @@ function mirrorHeight(){
     text(buttonStrMirH[i], xall+w/2, y1+h/2);
   }
 }
+function refraction() {
+  var r = [];
+  push();
+  background(31);
+  textSize(20);
+  translate(centerXMirH,height/2);
+  //stroke(0,255,0);
+  strokeWeight(2);
+  //line(-width,0,width,0);
+  stroke(255,255,50);
+  line(0,height,0,-height);
 
+  noStroke();
+  fill(19,140,186,map(n2,n1,4.5,0,255));
+  rect(-width,0,2*width,height);
+
+
+
+
+  fill(200);
+  text("Kırıcı indis: "+round(n2*10)/10,-centerXMirH+100,centerYMirH-50);
+  text("Kırıcı indis: "+round(n1*10)/10,-centerXMirH+100,-centerYMirH+50);
+  textAlign(LEFT);
+  text("Kritik açı: "+round(degrees(asin(n1/n2))*100)/100,-centerXMirH+25,0);
+  textAlign(CENTER);
+  fill(255,255,50);
+  textSize(10);
+  text("Normal",25,-centerYMirH+25);
+  //vecRef.x = mouseX-centerXMirH;
+  //vecRef.y = mouseY-height/2;
+  //text("Gelen açı:"+round(degrees(abs(PI/2-abs(atan2(vecRef.y,vecRef.x))))*100)/100,centerXMirH-100,-centerYMirH+120)
+  r = refrCal(vecRef.x,vecRef.y);
+
+  stroke(255,0,0,100);
+  line(0,0,r[0],-sgn(vecRef.y)*r[1]);
+  stroke(0,0,255,100)
+  line(0,0,vecRef.x,vecRef.y);
+  pop();
+
+  stroke(50);
+  fill(200);
+  rect(width*(0.8), height*(0.03), width*(0.18), height*(0.94), 10);
+
+
+  fill(0);
+  noStroke();
+  textAlign(LEFT);
+  textSize(20);
+  text("Gelen açı: "+round(degrees(abs(PI/2-abs(atan2(vecRef.y,vecRef.x))))*100)/100+"°", width*(0.82), height*(0.09));
+  text("Yansıyan açı: "+round(degrees(abs(PI/2-abs(PI/2-abs(atan2(r[0],r[1])))))*100)/100+"°", width*(0.82), height*(0.15));
+
+  for (var i = 0; i<n; i++) {
+    var y1 = height*(0.20) +i*(offset + h);
+    tempC = (i <= 3)?color(150):color('#3B71A3')
+    fill(tempC);
+    if (buttonMouse(xall, w, y1, h, true)) {
+      (i <=3)?fill(175):fill(84,138,188);
+    }
+    stroke(50);
+    strokeWeight(2);
+    rect(xall, y1, w, h, 10);
+    textAlign(CENTER,CENTER);
+    textSize(20);
+    fill(0);
+    noStroke();
+    text(buttonStrRef[i], xall+w/2, y1+h/2);
+  }
+}
 
 function draw(){
   if(mode == 0)mirrorRay();
   if(mode == 1)mirrorHeight();
-  if(mode == 2){if(confirm("KIRILMA SİMÜLASYONU HENÜZ HAZIR DEĞİLDİR..")){mode = 0;}else{mode= 0;}}
+  if(mode == 2){/*if(confirm("KIRILMA SİMÜLASYONU HENÜZ HAZIR DEĞİLDİR..")){mode = 0;}else{mode= 0;}*/refraction();}
   animation();
 }
 
@@ -344,6 +435,11 @@ function mousePressed() {
     vecMirH.x = mouseX - centerXMirH;
     vecMirH.y = mouseY - centerYMirH;
   }
+  if(!menuMouse()&& mode == 2){
+    vecRef.x = mouseX - centerXMirH;
+    vecRef.y = mouseY - centerYMirH;
+  }
+
 }
 function mouseReleased() {
 
@@ -361,17 +457,21 @@ function mouseReleased() {
     if (buttonMouse(xall, w, y1, h, false))
     {
       if (i == 0) {
-        lineCord = expMer;
-        vecMirH.x = r1;
+        lineCord = (mode == 0)?expMer:lineCord;
+        vecMirH.x = (mode == 1)?r1:vecMirH.x;
+        n1 = (mode == 2 && n1+0.1 < n2)?n1+0.1:n1;
       } else if (i == 1) {
-        lineCord = expOdk;
-        vecMirH.x = r1/2;
+        lineCord = (mode == 0)?expOdk:lineCord;
+        vecMirH.x = (mode == 1)?(r1/2):(vecMirH.x);
+        n1 = (mode == 2 && n1-0.1 > 0)?n1-0.1:n1;
       } else if (i == 2) {
-        lineCord = expPar;
-        vecMirH.x = "1E+1085";
+        lineCord  = (mode == 0)?expPar:lineCord;
+        vecMirH.x = (mode == 1)?"1E+1085":vecMirH.x;
+        n2        = (mode == 2 && n2 + 0.1 < 4.5)?n2+0.1:n2;
       } else if (i == 3) {
-        lineCord = exp3F;
-        vecMirH.x = 3*f1;
+        lineCord = (mode==0)?exp3F:lineCord;
+        vecMirH.x = (mode==1)?3*f1:vecMirH.x;
+        n2 = (mode == 2 && n2 - 0.1 > n1)?n2-0.1:n2;
       } else if (i == 4) {
         mode = (2+mode)%3;
       } else if ( i == 5){
